@@ -47,6 +47,9 @@
     // 比原来的 observer 一直监听性能更好，原有的 observer 会收到播放时间的更新，每秒都在触发 callback
     function handlePartChangeInFullScreenMode() {
         let titleListToObserve = document.querySelector("#multi_page > div.cur-list > ul");
+        if (!titleListToObserve) {
+            return;
+        }
         var obser = new MutationObserver(function (mutationRecords, observer) {
             let titleListWrap = document.querySelector("div.bilibili-player-video-btn-menu-wrap");
             if (titleListWrap) {
