@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         哔哩哔哩（bilibili | B站）多p 视频选集区标题显示加宽
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  哔哩哔哩（bilibili | B站 | b站）多p 视频选集区标题显示加宽
 // @author       chulong
 // @match       https://www.bilibili.com/video/av*
