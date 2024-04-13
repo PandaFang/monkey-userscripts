@@ -7,6 +7,7 @@
 // @homepage    https://greasyfork.org/zh-CN/scripts/423654
 // @match       https://www.bilibili.com/video/av*
 // @match       https://www.bilibili.com/video/BV*
+// @grant       GM_addStyle
 // ==/UserScript==
 
 (function () {
@@ -41,23 +42,18 @@
         // 获取投稿按钮的位置，后面加宽参考它的位置
         let uploadButtonRect = document.querySelector('.header-upload-entry').getBoundingClientRect();
 
-        // 非全屏时，分p 列表显示框
+        // 非全屏时，新版播放页，常规播放或宽屏播放时分p选集列表的宽度
         let multiPageDiv = document.getElementById("multi_page");
         if(multiPageDiv) {
             multiPageDiv.style.width =  uploadButtonRect.x + uploadButtonRect.width -  multiPageDiv.getBoundingClientRect().x + 'px'
-            let titleTextWidth = uploadButtonRect.x + uploadButtonRect.width -  multiPageDiv.getBoundingClientRect().x - 60 + 'px'
-            console.log(SCRIPT_NAME, document.querySelectorAll('.link-content'))
-            document.querySelectorAll('.link-content').forEach((item, index) => {
-                console.log(SCRIPT_NAME, item, index)
-                item.style.width = titleTextWidth;
-            });
+            let titleTextWidth = uploadButtonRect.x + uploadButtonRect.width -  multiPageDiv.getBoundingClientRect().x - 16 + 'px'
+            GM_addStyle(`.multi-page-v1 .cur-list .list-box li{width: ${titleTextWidth} !important}`)
 
         }
 
          // 非全屏时，合集列表显示框
         let sectionListDiv = document.querySelector('#mirror-vdcon > div.right-container.is-in-large-ab > div > div:nth-child(8) > div.base-video-sections-v1 > div.video-sections-content-list');
         if (sectionListDiv) {
-            // document.querySelector('div.base-video-sections-v1').style.width = CONFIG_WIDTH;
             let videoSectionsContainer = document.querySelector('div.base-video-sections-v1')
             let sectionListWidth = uploadButtonRect.x + uploadButtonRect.width -  videoSectionsContainer.getBoundingClientRect().x;
        
@@ -74,6 +70,7 @@
       
 
         // 非全屏时，合集列表显示框的高度
+        
         let sectionListDivObserver = new MutationObserver(function callback1(mutationRecords, observer) {
             mutationRecords.forEach((item, index) =>{
                 // if (item.type == 'childList') {
@@ -84,47 +81,14 @@
         });
         let childListChangeObserveConfig = {
             attributes: true,
-            childList: true,
-            subtree: true,
-        };
-        sectionListDivObserver.observe(sectionListDiv, childListChangeObserveConfig);
-
-
-        // 新版播放页，  常规播放或宽屏播放时分p选集列表的宽度
-        var liItems = document.querySelectorAll("#multi_page > div.cur-list > ul.list-box li");
-        if (liItems) {
-           liItems.forEach( function(item, index){
-               item.style.width = CONFIG_WIDTH
-           });
-        }
-
-
-
-
-
-        // 网页全屏或全屏播放时选集列表的容器的宽度
-        function fullScreenCallback(mutationRecords , observer) {
-                mutationRecords.forEach((item, index) => {
-                    if (item.type == 'childList') {
-                        item.addedNodes.forEach((it, i) => {
-                            if (it.ariaLabel == "选集") {
-                                let titleListWrap = document.querySelector("div.bpx-player-ctrl-eplist-menu-wrap");
-                                if (titleListWrap) {
-                                    titleListWrap.style.width = CONFIG_WIDTH;
-                                    console.log(SCRIPT_NAME, '全屏播放下设置了选集容器宽度');
-                                }
-                            }
-                        });
-                    }
-                });
-        }
-
-        let newPartTitleListInFullScreenModeLoadMutationObserver = new MutationObserver(fullScreenCallback);
-        let newConfig = {
+            attributeFilter:['style'],
             childList: true,
             subtree: false,
         };
-        newPartTitleListInFullScreenModeLoadMutationObserver.observe(newPartTitleListInFullScreenModeElementToObserve, newConfig);
+        sectionListDivObserver.observe(sectionListDiv, childListChangeObserveConfig);
+
+        // 网页全屏或全屏播放时选集列表的容器的宽度
+        GM_addStyle('.bpx-player-ctrl-eplist-menu-wrap{width: 550px}')
     }
 
     // -------- 以下是处理旧版播放页（2023年以前）
