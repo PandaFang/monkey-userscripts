@@ -2,7 +2,7 @@
 // @name        哔哩哔哩（bilibili | B站）多p 合集 视频选集区标题显示加宽加高
 // @namespace   http://tampermonkey.net/
 // @version     0.6
-// @description 哔哩哔哩（bilibili | B站 | b站）多p 合集 视频选集区标题显示加宽加高， v0.6 支持2023年新版播放器的合集列表标题显示加宽加高
+// @description 哔哩哔哩（bilibili | B站 | b站）多p 合集 视频选集区标题显示加宽加高， v0.6 支持2023年新版播放器的合集列表标题显示加宽和加高，修复了有封面的合集没有加宽的问题
 // @author      chulong
 // @homepage    https://greasyfork.org/zh-CN/scripts/423654
 // @match       https://www.bilibili.com/video/av*
@@ -14,8 +14,6 @@
     "use strict";
 
     // Your code here...
-    debugger;
-
     const CONFIG_WIDTH = "550px"; // 全屏播放时，右下角选集容器的宽度
     const SCRIPT_NAME = 'B站分P合集标题显示加宽脚本'
 
@@ -25,7 +23,6 @@
         "div.bpx-player-video-area > div.bpx-player-control-wrap >" +
         "div.bpx-player-control-entity > div.bpx-player-control-bottom >" +
         "div.bpx-player-control-bottom-right"
-
     )
 
     // 获取播放器的高度，后续分p合集列表容器参照此高度
@@ -42,35 +39,37 @@
         // 获取投稿按钮的位置，后面加宽参考它的位置
         let uploadButtonRect = document.querySelector('.header-upload-entry').getBoundingClientRect();
 
-        // 非全屏时，新版播放页，常规播放或宽屏播放时分p选集列表的宽度
+        // 直接把右边的整个容器加宽
+        let rightContainer = document.querySelector('.right-container');
+        let rightContainerRect = rightContainer.getBoundingClientRect()
+        let rightContianerEnlargeWidth = (uploadButtonRect.x + uploadButtonRect.width -  rightContainerRect.x - rightContainerRect.width ) *2 * 0.9 + rightContainerRect.width  + 'px'
+        rightContainer.style.width = rightContianerEnlargeWidth
+
+        // 非全屏时，新版播放页，常规播放或宽屏播放时分p选集列表的标题宽度，分p参考视频 https://www.bilibili.com/video/BV15J4m1L7YB/
         let multiPageDiv = document.getElementById("multi_page");
         if(multiPageDiv) {
-            multiPageDiv.style.width =  uploadButtonRect.x + uploadButtonRect.width -  multiPageDiv.getBoundingClientRect().x + 'px'
-            let titleTextWidth = uploadButtonRect.x + uploadButtonRect.width -  multiPageDiv.getBoundingClientRect().x - 16 + 'px'
-            GM_addStyle(`.multi-page-v1 .cur-list .list-box li{width: ${titleTextWidth} !important}`)
-
+            GM_addStyle(`.multi-page-v1 .cur-list .list-box li{width: ${rightContianerEnlargeWidth} !important}`)
         }
 
-         // 非全屏时，合集列表显示框
-        let sectionListDiv = document.querySelector('#mirror-vdcon > div.right-container.is-in-large-ab > div > div:nth-child(8) > div.base-video-sections-v1 > div.video-sections-content-list');
+         // 非全屏时，合集列表显示框宽度
+        let sectionListDiv = document.querySelector('div.video-sections-content-list');
         if (sectionListDiv) {
+            // 对于无封面的合集 支持有分类和无分类， 有分类参考视频 https://space.bilibili.com/10330740/channel/collectiondetail?sid=1517
             let videoSectionsContainer = document.querySelector('div.base-video-sections-v1')
-            let sectionListWidth = uploadButtonRect.x + uploadButtonRect.width -  videoSectionsContainer.getBoundingClientRect().x;
-       
-            videoSectionsContainer.style.width = sectionListWidth + 'px';
-            sectionListDiv.style.height = videoPlayerHeight;
-
-               // 非全屏时，合集列表标题
-            let videoEpisodeCardInfoTitleNodeList = document.querySelectorAll('div.video-episode-card__info-title');
-            videoEpisodeCardInfoTitleNodeList.forEach((item, index) => {
-                item.style.width = sectionListWidth - 60 + 'px';
-            });
+            if (videoSectionsContainer) { 
+                let sectionListWidth = uploadButtonRect.x + uploadButtonRect.width -  videoSectionsContainer.getBoundingClientRect().x;
+                // 非全屏时，合集列表标题
+                let videoEpisodeCardInfoTitleNodeList = document.querySelectorAll('div.video-episode-card__info-title');
+                videoEpisodeCardInfoTitleNodeList.forEach((item, index) => {
+                    item.style.width = sectionListWidth - 60 + 'px';
+                })
+            } else if(document.querySelector('.video-episode-card__cover')) { // 对于有封面的 参考视频 https://www.bilibili.com/video/BV1634y1i7rV
+                console.log(SCRIPT_NAME, '这个合集有封面')
+                GM_addStyle(`.video-section-list{width: ${rightContianerEnlargeWidth} !important}`)
+            }
         }
-
-      
-
+                
         // 非全屏时，合集列表显示框的高度
-        
         let sectionListDivObserver = new MutationObserver(function callback1(mutationRecords, observer) {
             mutationRecords.forEach((item, index) =>{
                 // if (item.type == 'childList') {
@@ -81,7 +80,6 @@
         });
         let childListChangeObserveConfig = {
             attributes: true,
-            attributeFilter:['style'],
             childList: true,
             subtree: false,
         };
